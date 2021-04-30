@@ -14,6 +14,10 @@ module Lita::Handlers::Karma
       modify(response, :increment)
     end
 
+    def increment_and_react(response)
+      modify(response, :increment, true)
+    end
+
     def decrement(response)
       modify(response, :decrement)
     end
@@ -106,6 +110,12 @@ module Lita::Handlers::Karma
       )
 
       self.class.route(
+        %r{(#{pattern})\*\*#{token_terminator.source}},
+        :increment_and_react,
+        help: { t("help.increment_key") => t("help.increment_value") }
+      )
+
+      self.class.route(
         %r{(#{pattern})~~#{token_terminator.source}},
         :check,
         help: { t("help.check_key") => t("help.check_value") }
@@ -183,14 +193,20 @@ module Lita::Handlers::Karma
       end
     end
 
-    def modify(response, method_name)
+    def modify(response, method_name, should_react=false)
       user = response.user
 
       output = response.matches.map do |match|
         get_term(match[0]).public_send(method_name, user)
       end
 
-      response.reply output.join("; ")
+      if should_react
+        puts output
+
+        response.reply :ditto_party
+      else
+        response.reply output.join("; ")
+      end
     end
 
     # To ensure that constructs like foo++bar or foo--bar (the latter is
