@@ -203,7 +203,16 @@ module Lita::Handlers::Karma
       if should_react
         puts output
 
-        response.reply :ditto_party
+        # grab the overall count from a string like: "jeff: 4361 (4063),"
+        regex = /\b:\s(\d+)\s\(/
+        total_points = output.match(regex).captures.first
+        emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
+
+        numbers = total_points.split('').map(&:to_i).map { |n|
+          emojis[n]
+        }
+
+        response.reply numbers
       else
         response.reply output.join("; ")
       end
