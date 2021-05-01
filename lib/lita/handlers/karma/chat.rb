@@ -209,6 +209,8 @@ module Lita::Handlers::Karma
 
         match = output.first.match(regex)
 
+        puts match
+
         total_points = match.captures.first
         emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
 
