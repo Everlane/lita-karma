@@ -189,15 +189,9 @@ module Lita::Handlers::Karma
 
     def modify(response, method_name, should_react=false)
       user = response.user
-      regex_for_name_and_point_total = /(.*\b:\s\d+)\s\(/
 
       output = response.matches.map do |match|
-        # this will be a terms points, and all their linked terms, e.g."
-        # "jeff: 4367 (4069), linked to: a_beautiful_pumpkin_man: 0,"...
-        name_and_point_total = get_term(match[0]).public_send(method_name, user)
-        puts 'name_and_point_total'
-        puts name_and_point_total
-        name_and_point_total.match(regex_for_name_and_point_total).captures.first
+        get_term(match[0]).public_send(method_name, user)
       end
 
       if should_react
@@ -214,7 +208,7 @@ module Lita::Handlers::Karma
         # }
 
         # the "…" will make `lita-slack` thread the point total reply.
-        response.reply '…' + output.join("; ")
+        response.reply '…' + output.join(", ")
       else
         response.reply output.join("; ")
       end
