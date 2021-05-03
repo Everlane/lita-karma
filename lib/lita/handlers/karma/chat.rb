@@ -220,7 +220,7 @@ module Lita::Handlers::Karma
 
         puts numbers
 
-        response.reply numbers
+        response.reply_in_thread total_points
       else
         response.reply output.join("; ")
       end
