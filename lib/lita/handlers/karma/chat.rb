@@ -208,7 +208,6 @@ module Lita::Handlers::Karma
 
       # the "…" will make `lita-slack` thread the response.
       response.reply '…' + output.join(", ")
-      end
     end
 
     # To ensure that constructs like foo++bar or foo--bar (the latter is
