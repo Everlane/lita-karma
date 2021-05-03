@@ -99,7 +99,7 @@ module Lita::Handlers::Karma
     def define_dynamic_routes(pattern)
       self.class.route(
         %r{(#{pattern})\+\+#{token_terminator.source}},
-        :increment,
+        :increment_and_react,
         help: { t("help.increment_key") => t("help.increment_value") }
       )
 
@@ -107,12 +107,6 @@ module Lita::Handlers::Karma
         %r{(#{pattern})--#{token_terminator.source}},
         :decrement,
         help: { t("help.decrement_key") => t("help.decrement_value") }
-      )
-
-      self.class.route(
-        %r{(#{pattern})\*\*#{token_terminator.source}},
-        :increment_and_react,
-        help: { t("help.increment_key") => t("help.increment_value") }
       )
 
       self.class.route(
@@ -195,25 +189,28 @@ module Lita::Handlers::Karma
 
     def modify(response, method_name, should_react=false)
       user = response.user
+      regex_for_name_and_point_total = /(.*\b:\s\d+)\s\(/
 
       output = response.matches.map do |match|
-        get_term(match[0]).public_send(method_name, user)
+        # this will be a terms points, and all their linked terms, e.g."
+        # "jeff: 4367 (4069), linked to: a_beautiful_pumpkin_man: 0,"...
+        name_and_point_total = get_term(match[0]).public_send(method_name, user)
+        name_and_point_total.match(regex_for_name_and_point_total).captures.first
       end
 
       if should_react
         puts output
-        puts 'reacting with numbers'
 
         # grab the overall count from a string like: "jeff: 4361 (4063),"
-#         regex = /\b:\s(\d+)\s\(/
-#         match = output.first.match(regex)
-#         total_points = match.captures.first
-#         emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
-#         numbers = total_points.split('').map(&:to_i).map { |n|
-#           emojis[n]
-#         }
-#         puts numbers
+        # regex = /\b:\s(\d+)\s\(/
+        # match = output.first.match(regex)
+        # total_points = match.captures.first
+        # emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
+        # numbers = total_points.split('').map(&:to_i).map { |n|
+        #   emojis[n]
+        # }
 
+        # the "…" will make `lita-slack` thread the point total reply.
         response.reply '…' + output.join("; ")
       else
         response.reply output.join("; ")
