@@ -195,9 +195,6 @@ module Lita::Handlers::Karma
       end
 
       if should_react
-        puts 'output'
-        puts output
-
         # grab the overall count from a string like: "jeff: 4361 (4063),"
         # regex = /\b:\s(\d+)\s\(/
         # match = output.first.match(regex)
@@ -206,11 +203,11 @@ module Lita::Handlers::Karma
         # numbers = total_points.split('').map(&:to_i).map { |n|
         #   emojis[n]
         # }
+        # output = numbers
+      end
 
-        # the "…" will make `lita-slack` thread the point total reply.
-        response.reply '…' + output.join(", ")
-      else
-        response.reply output.join("; ")
+      # the "…" will make `lita-slack` thread the response.
+      response.reply '…' + output.join(", ")
       end
     end
 
