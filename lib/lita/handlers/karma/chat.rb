@@ -195,10 +195,13 @@ module Lita::Handlers::Karma
         # this will be a terms points, and all their linked terms, e.g."
         # "jeff: 4367 (4069), linked to: a_beautiful_pumpkin_man: 0,"...
         name_and_point_total = get_term(match[0]).public_send(method_name, user)
+        puts 'name_and_point_total'
+        puts name_and_point_total
         name_and_point_total.match(regex_for_name_and_point_total).captures.first
       end
 
       if should_react
+        puts 'output'
         puts output
 
         # grab the overall count from a string like: "jeff: 4361 (4063),"
