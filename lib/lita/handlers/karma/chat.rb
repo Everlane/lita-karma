@@ -205,22 +205,16 @@ module Lita::Handlers::Karma
         puts 'reacting with numbers'
 
         # grab the overall count from a string like: "jeff: 4361 (4063),"
-        regex = /\b:\s(\d+)\s\(/
+#         regex = /\b:\s(\d+)\s\(/
+#         match = output.first.match(regex)
+#         total_points = match.captures.first
+#         emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
+#         numbers = total_points.split('').map(&:to_i).map { |n|
+#           emojis[n]
+#         }
+#         puts numbers
 
-        match = output.first.match(regex)
-
-        puts match
-
-        total_points = match.captures.first
-        emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
-
-        numbers = total_points.split('').map(&:to_i).map { |n|
-          emojis[n]
-        }
-
-        puts numbers
-
-        response.reply '…' + numbers
+        response.reply '…' + output.join("; ")
       else
         response.reply output.join("; ")
       end
