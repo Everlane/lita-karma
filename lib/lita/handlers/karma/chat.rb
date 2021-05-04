@@ -203,7 +203,7 @@ module Lita::Handlers::Karma
       # the "…" will make `lita-slack` thread the response.
       messages_for_reply = ["…#{output.join(", ")}"]
 
-      if should_react
+      if should_react && output.length == 1
         # grab the overall count from a string like: "jeff: 4361 (4063),"
         puts output
         regex = /\b:\s(\d+)/
@@ -211,17 +211,19 @@ module Lita::Handlers::Karma
         total_points = match&.captures&.first
 
         if total_points
-          emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
+          emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine].map {|emoji|
+            ['', :_v2, :_v3, :_v4].map { |v|
+              "#{emoji}#{v}".to_sym
+            }
+          }
 
           numbers = total_points.split('').map(&:to_i).map { |n|
-            emojis[n]
+            emojis[n].shift
           }
 
           puts numbers
 
-          if numbers.count === numbers.uniq.count
-            messages_for_reply << numbers
-          end
+          messages_for_reply << numbers
         end
       end
 
