@@ -206,7 +206,7 @@ module Lita::Handlers::Karma
       if should_react
         # grab the overall count from a string like: "jeff: 4361 (4063),"
         puts output
-        regex = /\b:\s(\d+)\s\(/
+        regex = /\b:\s(\d+)/
         match = output.first&.match(regex)
         total_points = match&.captures&.first
 
