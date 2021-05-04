@@ -32,7 +32,7 @@ module Lita::Handlers::Karma
         term.check(true)
       end.compact
 
-      response.reply output.join("; ")
+      response.reply "…#{output.join("; ")}"
     end
 
     def list_best(response)
@@ -99,12 +99,6 @@ module Lita::Handlers::Karma
     def define_dynamic_routes(pattern)
       self.class.route(
         %r{(#{pattern})\+\+#{token_terminator.source}},
-        :increment,
-        help: { t("help.increment_key") => t("help.increment_value") }
-      )
-
-      self.class.route(
-        %r{(#{pattern})\*\*#{token_terminator.source}},
         :increment_and_react,
         help: { t("help.increment_key") => t("help.increment_value") }
       )
@@ -205,7 +199,6 @@ module Lita::Handlers::Karma
 
       if should_react && output.length == 1
         # grab the overall count from a string like: "jeff: 4361 (4063),"
-        puts output
         regex = /\b:\s(\d+)/
         match = output.first&.match(regex)
         total_points = match&.captures&.first
@@ -221,13 +214,9 @@ module Lita::Handlers::Karma
             emojis[n].shift
           }
 
-          puts numbers
-
           messages_for_reply << numbers
         end
       end
-
-      puts messages_for_reply
 
       response.reply messages_for_reply
     end
