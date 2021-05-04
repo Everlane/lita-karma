@@ -29,7 +29,7 @@ module Lita::Handlers::Karma
         term = get_term(match[0])
         next if seen.include?(term)
         seen << term
-        term.check
+        term.check(true)
       end.compact
 
       response.reply output.join("; ")
@@ -99,6 +99,12 @@ module Lita::Handlers::Karma
     def define_dynamic_routes(pattern)
       self.class.route(
         %r{(#{pattern})\+\+#{token_terminator.source}},
+        :increment,
+        help: { t("help.increment_key") => t("help.increment_value") }
+      )
+
+      self.class.route(
+        %r{(#{pattern})\*\*#{token_terminator.source}},
         :increment_and_react,
         help: { t("help.increment_key") => t("help.increment_value") }
       )
@@ -194,20 +200,30 @@ module Lita::Handlers::Karma
         get_term(match[0]).public_send(method_name, user)
       end
 
+      # the "…" will make `lita-slack` thread the response.
+      messages_for_reply = ["…#{output.join(", ")}"]
+
       if should_react
         # grab the overall count from a string like: "jeff: 4361 (4063),"
-        # regex = /\b:\s(\d+)\s\(/
-        # match = output.first.match(regex)
-        # total_points = match.captures.first
-        # emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
-        # numbers = total_points.split('').map(&:to_i).map { |n|
-        #   emojis[n]
-        # }
-        # output = numbers
+        regex = /\b:\s(\d+)\s\(/
+        match = output.first&.match(regex)
+        total_points = match.captures&.first
+
+        if match && total_points
+          emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
+          numbers = total_points.split('').map(&:to_i).map { |n|
+            emojis[n]
+          }
+
+          if numbers.count === numbers.uniq.count
+            messages_for_reply << numbers
+          end
+        end
+
+
       end
 
-      # the "…" will make `lita-slack` thread the response.
-      response.reply '…' + output.join(", ")
+      response.reply messages_for_reply
     end
 
     # To ensure that constructs like foo++bar or foo--bar (the latter is
