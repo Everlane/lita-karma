@@ -212,17 +212,20 @@ module Lita::Handlers::Karma
 
         if total_points
           emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine]
+
           numbers = total_points.split('').map(&:to_i).map { |n|
             emojis[n]
           }
+
+          puts numbers
 
           if numbers.count === numbers.uniq.count
             messages_for_reply << numbers
           end
         end
-
-
       end
+
+      puts messages_for_reply
 
       response.reply messages_for_reply
     end
