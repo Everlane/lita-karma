@@ -204,17 +204,34 @@ module Lita::Handlers::Karma
         total_points = match&.captures&.first
 
         if total_points
-          emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine].map {|emoji|
-            ['', :_v2, :_v3, :_v4].map { |v|
-              "#{emoji}#{v}".to_sym
-            }
-          }
+          celebration_emojis = [
+            'raised-hands',
+            'party-wizard',
+            'hands',
+            'tada',
+            'confetti_ball',
+            'partyblob',
+            'partyparrot',
+          ]
 
-          numbers = total_points.split('').map(&:to_i).map { |n|
-            emojis[n].shift
-          }
+          reaction_for_points = {
+            '100' => '100',
+            '420' => '420',
+            '9000' => '9000',
+            '666' => 'blob-devil',
+            '1000' => '1000',
+            '10' => celebration_emojis.sample,
+            '50' => celebration_emojis.sample,
+            '1' => celebration_emojis.sample,
+          }[total_points]
 
-          messages_for_reply << numbers
+          if !reaction_for_points && total_points.to_i % 100 === 0
+            reaction_for_points = celebration_emojis.sample
+          end
+
+          if reaction_for_points
+            messages_for_reply << reaction_for_points.to_sym
+          end
         end
       end
 
