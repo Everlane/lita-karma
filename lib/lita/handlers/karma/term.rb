@@ -31,10 +31,10 @@
       @link_cache = {}
     end
 
-    def check
+    def check(show_links=false)
       string = "#{self}: #{total_score}"
 
-      unless links_with_scores.empty?
+      if show_links && links_with_scores.any?
         link_text = links_with_scores.map { |term, score| "#{term}: #{score}" }.join(", ")
         string << " (#{own_score}), #{t("linked_to")}: #{link_text}"
       end

@@ -14,6 +14,10 @@ module Lita::Handlers::Karma
       modify(response, :increment)
     end
 
+    def increment_and_react(response)
+      modify(response, :increment, true)
+    end
+
     def decrement(response)
       modify(response, :decrement)
     end
@@ -25,10 +29,10 @@ module Lita::Handlers::Karma
         term = get_term(match[0])
         next if seen.include?(term)
         seen << term
-        term.check
+        term.check(true)
       end.compact
 
-      response.reply output.join("; ")
+      response.reply "…#{output.join("; ")}"
     end
 
     def list_best(response)
@@ -95,7 +99,7 @@ module Lita::Handlers::Karma
     def define_dynamic_routes(pattern)
       self.class.route(
         %r{(#{pattern})\+\+#{token_terminator.source}},
-        :increment,
+        :increment_and_react,
         help: { t("help.increment_key") => t("help.increment_value") }
       )
 
@@ -183,14 +187,76 @@ module Lita::Handlers::Karma
       end
     end
 
-    def modify(response, method_name)
+    def modify(response, method_name, should_react=false)
       user = response.user
+      messages_for_reply = []
 
       output = response.matches.map do |match|
         get_term(match[0]).public_send(method_name, user)
       end
 
-      response.reply output.join("; ")
+      if should_react
+
+        # If multiple terms were modified, we respond in a thread
+        if output.length > 1
+          # the "…" will make `lita-slack` thread the response.
+          messages_for_reply << ["…#{output.join(", ")}"]
+        end
+
+        # grab the overall count from a string like: "jeff: 4361 (4063),"
+        regex = /\b:\s(\d+)/
+        match = output.first&.match(regex)
+        total_points = match&.captures&.first
+
+        if total_points
+          # If only one person got points, we react to the original message with
+          # emojis rather than a threaded reply
+          if output.length === 1
+            emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine].map {|emoji|
+              ['', :_v2, :_v3, :_v4].map { |v|
+                "#{emoji}#{v}".to_sym
+              }
+            }
+
+            numbers = total_points.split('').map(&:to_i).map { |n|
+              emojis[n].shift
+            }
+
+            messages_for_reply << numbers
+          end
+
+          celebration_emojis = [
+            'raised-hands',
+            'party-wizard',
+            'hands',
+            'tada',
+            'confetti_ball',
+            'partyblob',
+            'partyparrot',
+          ]
+
+          reaction_for_points = {
+            '100' => '100',
+            '420' => '420',
+            '9000' => '9000',
+            '666' => 'blob-devil',
+            '1000' => '1000',
+            '10' => celebration_emojis.sample,
+            '50' => celebration_emojis.sample,
+            '1' => celebration_emojis.sample,
+          }[total_points]
+
+          if !reaction_for_points && total_points.to_i % 100 === 0
+            reaction_for_points = celebration_emojis.sample
+          end
+
+          if reaction_for_points
+            messages_for_reply << reaction_for_points.to_sym
+          end
+        end
+      end
+
+      response.reply messages_for_reply
     end
 
     # To ensure that constructs like foo++bar or foo--bar (the latter is
