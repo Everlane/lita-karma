@@ -189,21 +189,42 @@ module Lita::Handlers::Karma
 
     def modify(response, method_name, should_react=false)
       user = response.user
+      messages_for_reply = []
 
       output = response.matches.map do |match|
         get_term(match[0]).public_send(method_name, user)
       end
 
-      # the "…" will make `lita-slack` thread the response.
-      messages_for_reply = ["…#{output.join(", ")}"]
+      if should_react
 
-      if should_react && output.length == 1
+        # If multiple terms were modified, we respond in a thread
+        if output.length > 1
+          # the "…" will make `lita-slack` thread the response.
+          messages_for_reply << ["…#{output.join(", ")}"]
+        end
+
         # grab the overall count from a string like: "jeff: 4361 (4063),"
         regex = /\b:\s(\d+)/
         match = output.first&.match(regex)
         total_points = match&.captures&.first
 
         if total_points
+          # If only one person got points, we react to the original message with
+          # emojis rather than a threaded reply
+          if output.length === 1
+            emojis = [:zero, :one, :two, :three, :four, :five, :six, :seven, :eight, :nine].map {|emoji|
+              ['', :_v2, :_v3, :_v4].map { |v|
+                "#{emoji}#{v}".to_sym
+              }
+            }
+
+            numbers = total_points.split('').map(&:to_i).map { |n|
+              emojis[n].shift
+            }
+
+            messages_for_reply << numbers
+          end
+
           celebration_emojis = [
             'raised-hands',
             'party-wizard',
